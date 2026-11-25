@@ -1,0 +1,17 @@
+{
+  "name": "刷手机刹车 · 90 秒替代",
+  "short_name": "刹车",
+  "description": "想刷手机的那一刻，给你一件 90 秒能做完的小事。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F4",
+  "theme_color": "#EF4123",
+  "icons": [
+    { "src": "../assets/icon-brake-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-brake-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-brake-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

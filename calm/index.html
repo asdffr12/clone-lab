@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>稳住 · Rootd 复刻</title>
+<style>
+  :root{
+    --bg1:#0b1119; --bg2:#131d2b; --card:rgba(255,255,255,.055);
+    --line:rgba(255,255,255,.10); --ink:#eaf2f5; --muted:#93a3b3;
+    --mint:#6ee7d2; --mint-dim:#3fb7a4; --warn:#ffb4a2;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    background:radial-gradient(1200px 700px at 15% -10%, #1b2b3f 0%, var(--bg1) 55%) fixed;
+    color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:26px 22px 70px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em}
+  .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#6ee7d2,#3fb7a4);display:grid;place-items:center;color:#07211d;font-weight:800;font-size:15px}
+  .ghost{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 12px}
+
+  .hero{margin-top:26px;text-align:center;padding:34px 20px 26px;border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(110,231,210,.06),rgba(255,255,255,.02))}
+  .hero .kicker{font-size:12px;letter-spacing:.14em;color:var(--mint);text-transform:uppercase}
+  .hero h1{margin:12px 0 8px;font-size:30px;letter-spacing:-.03em}
+  .hero p{margin:0 auto 24px;max-width:440px;color:var(--muted);font-size:14px;line-height:1.7}
+  .panic{
+    width:172px;height:172px;border-radius:50%;border:1px solid rgba(110,231,210,.35);cursor:pointer;
+    background:radial-gradient(circle at 35% 30%, rgba(110,231,210,.28), rgba(110,231,210,.06) 62%, transparent 70%);
+    color:var(--ink);font-size:17px;font-weight:700;line-height:1.5;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .panic:hover{transform:scale(1.03);box-shadow:0 0 0 10px rgba(110,231,210,.06)}
+  .panic:active{transform:scale(.98)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
+  .stat b{display:block;font-size:20px;font-weight:700}
+  .stat span{font-size:11.5px;color:var(--muted)}
+
+  .panel{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px}
+  .panel h2{margin:0 0 4px;font-size:14.5px}
+  .panel .sub{margin:0 0 12px;color:var(--muted);font-size:12px}
+  .hist{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+  .hist li{display:flex;gap:12px;align-items:center;font-size:13px;color:#cfe0e6;flex-wrap:wrap}
+  .hist .memo{flex-basis:100%;margin:2px 0 0 90px;color:#7f93a1;font-size:11.5px;line-height:1.5}
+  .hist .d{font-size:11.5px;color:var(--muted);width:78px;flex:none}
+  .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.10);flex:1;position:relative;overflow:hidden}
+  .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ffb4a2,#6ee7d2);border-radius:99px}
+  .hist .num{width:56px;text-align:right;font-variant-numeric:tabular-nums;color:var(--mint)}
+  .empty{color:var(--muted);font-size:12.5px}
+
+  .tips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .tip{border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+  .tip b{display:block;font-size:13px;margin-bottom:6px}
+  .tip p{margin:0;font-size:12px;line-height:1.65;color:var(--muted)}
+
+  /* flow */
+  .flow{position:fixed;inset:0;background:#08101a;z-index:70;display:none;flex-direction:column}
+  .flow.show{display:flex}
+  .flow-top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .steps{display:flex;gap:6px}
+  .steps i{width:26px;height:3px;border-radius:99px;background:rgba(255,255,255,.14)}
+  .steps i.on{background:var(--mint)}
+  .flow-top button{background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;padding:28px 22px;overflow:auto}
+  .pane{width:min(560px,100%);text-align:center}
+  .pane h2{margin:0 0 10px;font-size:26px;letter-spacing:-.02em}
+  .pane p{color:var(--muted);font-size:14px;line-height:1.75;margin:0 auto 22px;max-width:460px}
+
+  .breath{position:relative;width:230px;height:230px;margin:6px auto 18px;display:grid;place-items:center}
+  .breath .halo{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(110,231,210,.22)}
+  .breath .orb{
+    width:230px;height:230px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(110,231,210,.55), rgba(63,183,164,.16) 60%, rgba(63,183,164,.05) 72%);
+    transform:scale(.62); transition:transform 4s cubic-bezier(.4,0,.2,1);
+  }
+  .breath .label{position:absolute;font-size:15px;font-weight:600;letter-spacing:.02em}
+  .breath .count{position:absolute;bottom:66px;font-size:12px;color:var(--muted)}
+
+  .slider-row{display:flex;align-items:center;gap:14px;justify-content:center;margin:22px 0 6px}
+  .slider-row input[type=range]{width:min(360px,70vw);accent-color:#6ee7d2}
+  .slider-row b{font-size:22px;width:34px;text-align:center;font-variant-numeric:tabular-nums}
+  .scale{display:flex;justify-content:space-between;width:min(360px,70vw);margin:0 auto;font-size:11px;color:var(--muted)}
+
+  .grd{display:grid;gap:9px;text-align:left;margin-bottom:18px}
+  .grd label{display:block;font-size:12.5px;color:#a9bbc7;margin-bottom:4px}
+  .grd input[type=text]{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:11px;color:var(--ink);padding:11px 13px;font-size:13.5px;outline:none}
+  .grd input[type=text]:focus{border-color:rgba(110,231,210,.45)}
+  .grd input[type=text]::placeholder{color:#5f7385}
+
+  .note{width:100%;min-height:84px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:13px;color:var(--ink);padding:12px 14px;font-size:13.5px;line-height:1.65;resize:vertical;outline:none}
+
+  .nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+  .btn{border:0;border-radius:13px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer}
+  .btn-main{background:linear-gradient(135deg,#6ee7d2,#3fb7a4);color:#062420}
+  .btn-line{background:rgba(255,255,255,.06);color:#cfe0e6}
+  .btn-line:hover{background:rgba(255,255,255,.1)}
+
+  .chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);justify-content:center;margin-top:14px}
+  .chk input{accent-color:#6ee7d2}
+
+  .pats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 0 20px}
+  .pat{border:1px solid var(--line);background:rgba(255,255,255,.04);color:#b8c8d3;border-radius:999px;padding:8px 14px;font-size:12.5px;cursor:pointer;transition:all .15s ease}
+  .pat b{display:block;font-size:11px;color:#7f93a1;font-weight:500;margin-top:2px}
+  .pat.on{border-color:rgba(110,231,210,.5);background:rgba(110,231,210,.12);color:#dffaf4}
+  .pat.on b{color:#8fd9cb}
+
+  .chart{display:flex;align-items:flex-end;gap:8px;height:92px;margin-top:4px}
+  .chart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .chart .bar2{width:100%;min-height:3px;border-radius:8px;background:linear-gradient(180deg,#6ee7d2,#3fb7a4);transition:height .3s ease}
+  .chart .lbl{font-size:10.5px;color:var(--muted)}
+  .chart .val{font-size:10.5px;color:#8fd9cb}
+  footer{margin-top:26px;text-align:center;color:#5f7385;font-size:11.5px}
+  .linkbtn{background:none;border:0;color:#7f93a1;font-size:11.5px;text-decoration:underline;cursor:pointer;padding:0}
+  @media(max-width:600px){
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .tips{grid-template-columns:1fr}
+    .hero h1{font-size:24px}
+    .panic{width:150px;height:150px;font-size:15px}
+    .breath,.breath .orb{width:190px;height:190px}
+  }
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0B1119">
+<link rel="apple-touch-icon" href="../assets/icon-calm-180.png">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="logo">◎</span> 稳住</div>
+    <div class="ghost" id="today-tip">今天还没用过</div>
+  </header>
+
+  <section class="hero">
+    <div class="kicker">panic relief · 呼吸急救</div>
+    <h1>现在很难受，就先按一下</h1>
+    <p>三步：呼吸 → 找回到当下的感官 → 记一笔。整个过程三到五分钟，顺序跟着走就行。</p>
+    <button class="panic" id="start">我现在<br>很慌</button>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><b id="s-week">0</b><span>本周次数</span></div>
+    <div class="stat"><b id="s-drop">0</b><span>平均缓解</span></div>
+    <div class="stat"><b id="s-total">0</b><span>累计练习</span></div>
+  </div>
+
+  <section class="panel">
+    <h2>练习记录</h2>
+    <p class="sub">难受程度 1–10，看的是前后差值，不是绝对值。</p>
+    <ul class="hist" id="hist"></ul>
+    <p class="empty" id="empty">还没有记录。下一次难受的时候，试一次就知道有没有用。</p>
+  </section>
+
+  <section class="panel">
+    <h2>最近 7 天</h2>
+    <p class="sub">柱子是当天练习次数，鼠标停在柱子上能看到当天的平均缓解。</p>
+    <div class="chart" id="chart"></div>
+  </section>
+
+  <section class="panel">
+    <h2>三个急救动作</h2>
+    <p class="sub">不用打开这个页面也能做。</p>
+    <div class="tips">
+      <div class="tip"><b>冷水 30 秒</b><p>冷水洗脸，或握住冰块。强烈的温度刺激会把注意力从思绪拉回身体。</p></div>
+      <div class="tip"><b>延长呼气</b><p>吸气 4 秒、呼气 8 秒。呼气比吸气长，心率会跟着降下来。</p></div>
+      <div class="tip"><b>说出 5 样东西</b><p>大声说出你看得到的 5 样东西，一件一件说，不要快。</p></div>
+    </div>
+  </section>
+
+  <footer>Rootd 功能复刻 · 数据只存在本机 · 不替代专业医疗建议 · <button id="reset" class="linkbtn">清空记录</button> · <button id="export" class="linkbtn">导出备份</button> · <label class="linkbtn" for="import">导入备份</label><input id="import" type="file" accept=".json,application/json" hidden></footer>
+</div>
+
+<div class="flow" id="flow">
+  <div class="flow-top">
+    <div class="steps"><i class="on"></i><i></i><i></i><i></i></div>
+    <div style="display:flex;gap:14px">
+      <button id="back">上一步</button>
+      <button id="quit">退出</button>
+    </div>
+  </div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "rootd.v1";
+  var state = (function(){
+    try{ var s = JSON.parse(localStorage.getItem(KEY)||"{}"); return {log:s.log||[], pattern:s.pattern||"478"}; }
+    catch(e){ return {log:[], pattern:"478"}; }
+  })();
+  function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+  var PATTERNS = {
+    "478": {title:"4-7-8 助眠呼吸", rounds:4, phases:[
+      {n:"吸气", s:4, scale:1, t:4},
+      {n:"憋气", s:7, scale:1, t:0.3},
+      {n:"呼气", s:8, scale:0.62, t:8}
+    ]},
+    "444": {title:"4-4-4 平稳呼吸", rounds:6, phases:[
+      {n:"吸气", s:4, scale:1, t:4},
+      {n:"憋气", s:4, scale:1, t:0.3},
+      {n:"呼气", s:4, scale:0.62, t:4}
+    ]},
+    "box": {title:"4-4-4-4 方箱呼吸", rounds:5, phases:[
+      {n:"吸气", s:4, scale:1, t:4},
+      {n:"憋气", s:4, scale:1, t:0.3},
+      {n:"呼气", s:4, scale:0.62, t:4},
+      {n:"停住", s:4, scale:0.62, t:0.3}
+    ]}
+  };
+  var PAT_LABEL = {"478":"4-7-8 · 助眠", "444":"4-4-4 · 平稳", "box":"4-4-4-4 · 方箱"};
+
+  var flow = document.getElementById("flow");
+  var stage = document.getElementById("stage");
+  var stepsEl = flow.querySelector(".steps");
+  var step = 0, before = 5, after = 5, breathTimer = null, groundAnswers = [];
+
+  function renderStats(){
+    var monday = new Date();
+    monday.setHours(0,0,0,0);
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7)); // 本周一 00:00
+    var weekStart = monday.getTime();
+    var week = 0;
+    var drops = [];
+    state.log.forEach(function(x){
+      if(x.ts >= weekStart) week++;
+      drops.push(x.before - x.after);
+    });
+    document.getElementById("s-week").textContent = week;
+    document.getElementById("s-total").textContent = state.log.length;
+    var avg = drops.length ? (drops.reduce(function(a,b){return a+b;},0)/drops.length) : 0;
+    document.getElementById("s-drop").textContent = (Math.round(avg*10)/10);
+    var today = new Date().toDateString();
+    var usedToday = state.log.some(function(x){ return new Date(x.ts).toDateString()===today; });
+    document.getElementById("today-tip").textContent = usedToday ? "今天已经练过一次" : "今天还没用过";
+  }
+
+  function renderHist(){
+    var ul = document.getElementById("hist");
+    ul.innerHTML = "";
+    var items = state.log.slice(-6).reverse();
+    document.getElementById("empty").style.display = items.length ? "none":"block";
+    items.forEach(function(x){
+      var li = document.createElement("li");
+      var d = new Date(x.ts);
+      var ds = (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+      var pct = Math.max(0, Math.min(100, (1 - x.after/10)*100));
+      li.innerHTML = '<span class="d">'+ds+'</span><span class="bar"><i style="width:'+pct+'%"></i></span>'+
+                     '<span class="num">'+x.before+' → '+x.after+'</span>'+
+                     (x.note ? '<div class="memo">“'+esc(x.note)+'”</div>'
+                       : (x.ground && x.ground.length ? '<div class="memo">已锚定：'+esc(x.ground.join('、'))+'</div>' : ''));
+      ul.appendChild(li);
+    });
+  }
+
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function dayKey(ts){
+    var d = new Date(ts);
+    return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+  }
+
+  function renderChart(){
+    var box = document.getElementById("chart");
+    if(!box) return;
+    box.innerHTML = "";
+    var days = [];
+    for(var i=6;i>=0;i--){
+      var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i);
+      days.push({key:dayKey(d.getTime()), label:i===0?"今":["日","一","二","三","四","五","六"][d.getDay()]});
+    }
+    var counts = [], drops = [];
+    days.forEach(function(d){
+      var items = state.log.filter(function(x){ return dayKey(x.ts)===d.key; });
+      counts.push(items.length);
+      var sum = items.reduce(function(a,x){ return a + (x.before - x.after); },0);
+      drops.push(items.length ? Math.round(sum/items.length*10)/10 : null);
+    });
+    var max = Math.max.apply(null, counts.concat([1]));
+    days.forEach(function(d, i){
+      var col = document.createElement("div"); col.className = "col";
+      var val = document.createElement("div"); val.className = "val"; val.textContent = counts[i] || "";
+      var bar = document.createElement("div"); bar.className = "bar2";
+      bar.style.height = (counts[i]/max*62 || 3) + "px";
+      bar.title = d.key + " · " + counts[i] + " 次" + (drops[i]!==null ? " · 平均降 " + drops[i] + " 分" : "");
+      var lbl = document.createElement("div"); lbl.className = "lbl"; lbl.textContent = d.label;
+      col.appendChild(val); col.appendChild(bar); col.appendChild(lbl);
+      box.appendChild(col);
+    });
+  }
+
+  function setStep(n){
+    step = n;
+    Array.prototype.forEach.call(stepsEl.children, function(el, i){
+      el.className = i<=n ? "on":"";
+    });
+  }
+
+  function clearTimers(){
+    clearInterval(breathTimer); breathTimer = null;
+  }
+
+  function quit(){
+    clearTimers();
+    flow.classList.remove("show");
+    stage.innerHTML = "";
+  }
+
+  function intro(){
+    setStep(0);
+    stage.innerHTML =
+      '<div class="pane">'+
+        '<h2>先给现在的难受打个分</h2>'+
+        '<p>1 是轻微不安，10 是最难受的时候。凭直觉选，不用想。</p>'+
+        '<div class="slider-row"><input type="range" min="1" max="10" step="1" value="'+before+'" id="before-range"><b id="before-num">'+before+'</b></div>'+
+        '<div class="scale"><span>1 轻微</span><span>10 最难受</span></div>'+
+        '<div class="pats">'+Object.keys(PATTERNS).map(function(k){
+          return '<button type="button" class="pat'+(state.pattern===k?" on":"")+'" data-pat="'+k+'">'+PAT_LABEL[k]+'</button>';
+        }).join("")+'</div>'+
+        '<div class="nav"><button class="btn btn-main" id="to-breath">开始，跟着呼吸</button></div>'+
+      '</div>';
+    var r = document.getElementById("before-range");
+    r.oninput = function(){
+      before = +r.value;
+      document.getElementById("before-num").textContent = before;
+    };
+    stage.querySelectorAll(".pat").forEach(function(btn){
+      btn.onclick = function(){
+        state.pattern = btn.getAttribute("data-pat");
+        save();
+        stage.querySelectorAll(".pat").forEach(function(b){ b.classList.remove("on"); });
+        btn.classList.add("on");
+      };
+    });
+    document.getElementById("to-breath").onclick = breathe;
+  }
+
+  function breathe(){
+    setStep(1);
+    var pat = PATTERNS[state.pattern] || PATTERNS["478"];
+    stage.innerHTML =
+      '<div class="pane">'+
+        '<h2>'+pat.title+'</h2>'+
+        '<p>跟着圆圈的大小走。做 '+pat.rounds+' 轮就够，不用追求标准。</p>'+
+        '<div class="breath"><div class="halo"></div><div class="orb" id="orb"></div>'+
+          '<div class="label" id="blabel">准备</div><div class="count" id="bcount">第 1 / '+pat.rounds+' 轮</div></div>'+
+        '<div class="nav"><button class="btn btn-line" id="skip">跳过，直接到下一步</button></div>'+
+      '</div>';
+    document.getElementById("skip").onclick = grounding;
+
+    var orb = document.getElementById("orb");
+    var label = document.getElementById("blabel");
+    var count = document.getElementById("bcount");
+    var phases = pat.phases;
+    var rounds = pat.rounds, round = 1, pi = 0, left = phases[0].s;
+
+    function apply(){
+      var p = phases[pi];
+      orb.style.transitionDuration = p.t + "s";
+      orb.style.transform = "scale(" + p.scale + ")";
+      left = p.s;
+      label.textContent = p.n + " " + left;
+      count.textContent = "第 " + round + " / " + rounds + " 轮";
+    }
+
+    function tick(){
+      left--;
+      if(left > 0){
+        label.textContent = phases[pi].n + " " + left;
+      } else {
+        pi++;
+        if(pi >= phases.length){
+          pi = 0;
+          round++;
+          if(round > rounds){ clearTimers(); grounding(); return; }
+        }
+        apply();
+      }
+      breathTimer = setTimeout(tick, 1000);
+    }
+
+    apply();
+    breathTimer = setTimeout(tick, 1000);
+  }
+
+  function grounding(){
+    clearTimers();
+    setStep(2);
+    var rows = [
+      ["看到", "5 样东西", "比如：台灯、水杯、门框的阴影"],
+      ["摸到", "4 种触感", "比如：椅子的布面、桌沿的凉"],
+      ["听到", "3 种声音", "比如：空调声、楼下的车"],
+      ["闻到", "2 种气味", "想不起来就写“空气”"],
+      ["尝到", "1 种味道", "嘴里的味道，或喝一口水"]
+    ];
+    stage.innerHTML =
+      '<div class="pane">'+
+        '<h2>把注意力放回房间</h2>'+
+        '<p>不用全填，能写几个写几个。写不出来，就在心里数。</p>'+
+        '<div class="grd">'+rows.map(function(r,i){
+          return '<div><label>'+r[0]+' '+r[1]+'</label><input type="text" id="g'+i+'" placeholder="'+r[2]+'"></div>';
+        }).join("")+'</div>'+
+        '<div class="nav"><button class="btn btn-main" id="to-record">我缓过来了，记一笔</button>'+
+        '<button class="btn btn-line" id="to-record2">直接记一笔</button></div>'+
+      '</div>';
+    document.getElementById("to-record").onclick = function(){
+      groundAnswers = [0,1,2,3,4].map(function(i){
+        var el = document.getElementById("g"+i);
+        return el ? el.value.trim() : "";
+      }).filter(Boolean);
+      record();
+    };
+    document.getElementById("to-record2").onclick = function(){
+      groundAnswers = [];
+      record();
+    };
+  }
+
+  function record(){
+    clearTimers();
+    setStep(3);
+    stage.innerHTML =
+      '<div class="pane">'+
+        '<h2>现在再打一次分</h2>'+
+        '<p>和刚才比一比。哪怕只降 1 分，也算这次没白做。</p>'+
+        '<div class="slider-row"><input type="range" min="1" max="10" step="1" value="'+Math.min(after,before)+'" id="after-range"><b id="after-num">'+Math.min(after,before)+'</b></div>'+
+        '<div class="scale"><span>1 轻微</span><span>10 最难受</span></div>'+
+        '<textarea class="note" id="note" placeholder="一句话就行：刚才是什么触发的？哪个动作最有用？（可留空）"></textarea>'+
+        '<div class="nav" style="margin-top:16px"><button class="btn btn-main" id="save">保存这次练习</button></div>'+
+      '</div>';
+    var r = document.getElementById("after-range");
+    r.oninput = function(){
+      after = +r.value;
+      document.getElementById("after-num").textContent = after;
+    };
+    document.getElementById("save").onclick = function(){
+      var note = document.getElementById("note").value.trim();
+      state.log.push({ts:Date.now(), before:before, after:after, note:note, ground:groundAnswers.slice(0,5)});
+      groundAnswers = [];
+      if(state.log.length>300) state.log = state.log.slice(-300);
+      save(); renderStats(); renderHist(); renderChart(); quit();
+      before = 5; after = 5;
+      document.getElementById("today-tip").textContent = "记下了，这次算过去了";
+    };
+  }
+
+  document.getElementById("start").onclick = function(){
+    flow.classList.add("show");
+    intro();
+  };
+  document.getElementById("quit").onclick = quit;
+  document.getElementById("back").onclick = function(){
+    if(step <= 0){ quit(); return; }
+    if(step === 1){ intro(); return; }
+    if(step === 2){ breathe(); return; }
+    grounding();
+  };
+  var resetBtn = document.getElementById("reset");
+  if(resetBtn){
+    resetBtn.onclick = function(){
+      if(!confirm("清空全部练习记录？此操作不能撤销。")) return;
+      state.log = [];
+      save(); renderStats(); renderHist(); renderChart();
+    };
+  }
+
+  document.getElementById("export").onclick = function(){
+    var payload = {app:"rootd-stable", version:1, exportedAt:new Date().toISOString(), data:state};
+    var blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    var a = document.createElement("a");
+    var d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = "稳住备份-" + d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0") + ".json";
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  };
+
+  document.getElementById("import").addEventListener("change", function(e){
+    var file = e.target.files[0]; if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var obj = JSON.parse(reader.result);
+        var data = obj && obj.data ? obj.data : obj;
+        if(!data || !Array.isArray(data.log)) throw new Error("格式不对");
+        state.log = data.log.slice(-300).filter(function(x){ return x && x.ts && typeof x.before === "number" && typeof x.after === "number"; });
+        if(data.pattern && PATTERNS[data.pattern]) state.pattern = data.pattern;
+        save(); renderStats(); renderHist(); renderChart();
+        document.getElementById("today-tip").textContent = "已导入 " + state.log.length + " 条记录";
+      }catch(err){ document.getElementById("today-tip").textContent = "这个文件读不了"; }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && flow.classList.contains("show")) quit();
+  });
+
+  renderStats(); renderHist(); renderChart();
+})();
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("../sw.js").catch(function(){})})}</script>
+</body>
+</html>
+

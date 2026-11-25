@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>复刻实验室 · 三个产品的功能复刻</title>
+<style>
+  :root{--bg:#faf8f4;--ink:#1b1a17;--muted:#767068;--line:#e9e3d8;--card:#fff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:48px 24px 72px}
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#a19a90}
+  h1{margin:14px 0 12px;font-size:44px;line-height:1.15;letter-spacing:-.035em}
+  h1 span{color:#e8502f}
+  .lead{max-width:600px;color:#57524b;font-size:15px;line-height:1.75;margin:0 0 8px}
+  .note{margin-top:14px;display:inline-block;font-size:12.5px;color:#7c756c;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:38px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 22px 20px;display:flex;flex-direction:column;text-decoration:none;color:inherit;min-height:330px;transition:transform .18s ease,box-shadow .18s ease}
+  .card:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(50,40,25,.09)}
+  .no{font-size:11.5px;color:#a8a096;letter-spacing:.12em}
+  .card h2{margin:10px 0 4px;font-size:22px;letter-spacing:-.02em}
+  .src{font-size:12px;color:#a19a90;margin-bottom:14px}
+  .card p{color:#615c55;font-size:13.5px;line-height:1.7;margin:0 0 16px}
+  .feats{list-style:none;margin:auto 0 0;padding:0;display:grid;gap:7px}
+  .feats li{font-size:12.5px;color:#4d4842;display:flex;gap:8px;align-items:flex-start}
+  .feats li i{width:5px;height:5px;border-radius:50%;background:#e8502f;margin-top:7px;flex:none}
+  .open{margin-top:18px;font-size:13px;font-weight:600;color:#1b1a17;display:flex;align-items:center;gap:6px}
+  .open span{transition:transform .18s ease}
+  .card:hover .open span{transform:translateX(3px)}
+
+  .miss{margin-top:34px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+  .miss h3{margin:0 0 6px;font-size:14px}
+  .miss p{margin:0;color:#615c55;font-size:12.5px;line-height:1.85}
+  footer{margin-top:30px;color:#a19a90;font-size:11.5px;text-align:center}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}h1{font-size:32px}}
+</style>
+<meta name="theme-color" content="#FAF8F4">
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">clone lab · 功能复刻</div>
+  <h1>三个赚到钱的小产品，<span>我各复刻了一个能用版</span></h1>
+  <p class="lead">不是像素级克隆，也不是把它们的素材搬过来。复刻的是核心流程：用户打开之后做什么、卡在哪、为什么第二天还会回来。</p>
+  <div class="note">三个都能直接打开，也可以「安装」到桌面或手机主屏。纯本地运行：无后端、无账号、数据不上传。</div>
+
+  <div class="grid">
+    <a class="card" href="brake/">
+      <div class="no">01 / Jack</div>
+      <h2>刷手机刹车</h2>
+      <div class="src">对标 Curiosity Quench</div>
+      <p>想刷手机的那一刻，给你一个 90 秒能做完的兴趣小任务。做完记一笔，用「替代」而不是「禁止」来戒。</p>
+      <ul class="feats">
+        <li><i></i>8 类兴趣 × 3 个微任务，可自建兴趣</li>
+        <li><i></i>倒计时圆环 + 完成记录 + 7 天柱状图</li>
+        <li><i></i>连续天数、今日拦截、替代分钟、JSON 备份</li>
+      </ul>
+      <div class="open">打开 <span>→</span></div>
+    </a>
+
+    <a class="card" href="calm/">
+      <div class="no">02 / Ania</div>
+      <h2>稳住</h2>
+      <div class="src">对标 Rootd</div>
+      <p>惊恐发作时的三步急救：4-7-8 呼吸、5-4-3-2-1 感官锚定、记录前后强度。看的是差值，不是绝对值。</p>
+      <ul class="feats">
+        <li><i></i>4-7-8 / 4-4-4 / 方箱，三种呼吸节奏</li>
+        <li><i></i>五感输入，写几个算几个</li>
+        <li><i></i>前后打分 + 缓解统计 + 7 天柱状图 + 备份</li>
+      </ul>
+      <div class="open">打开 <span>→</span></div>
+    </a>
+
+    <a class="card" href="slides/">
+      <div class="no">03 / Sanskar</div>
+      <h2>文字变 PPT</h2>
+      <div class="src">对标 MagicSlides</div>
+      <p>粘一篇文章，按标题自动切页、把长段落拆成要点，三套主题，导出真·PPTX 或网页版。</p>
+      <ul class="feats">
+        <li><i></i>粘贴 / 导入 .md，Ctrl+Enter 生成</li>
+        <li><i></i>长句切块、去口语词、同页去重，可加页改字</li>
+        <li><i></i>全屏预览 + PPTX、网页、大纲三种导出</li>
+      </ul>
+      <div class="open">打开 <span>→</span></div>
+    </a>
+  </div>
+
+  <section class="miss">
+    <h3>没有复刻的部分，以及原因</h3>
+    <p>PostBridge（多平台排期）要对接各家开放平台授权，没有账号拿不到发布权限；Ask Video 需要视频转写服务和模型额度；Blurb、Magic Form、Sheet AI 依赖 Chrome 扩展生态和 Google 账号。这些都不是写个页面就能真跑的，硬做出来只能是个假界面，所以留白比糊弄好。</p>
+  </section>
+
+<section class="miss">
+    <h3>怎么装到桌面 / 手机主屏</h3>
+    <p>电脑上用 Chrome 或 Edge 打开对应页面，点地址栏右侧（或菜单里）的「安装」，就会生成一个独立窗口的图标。iPhone 用 Safari 打开，点分享 → 添加到主屏幕。装好后断网也能打开上一次用过的页面；数据仍然只存在这台设备上。</p>
+  </section>
+
+  <footer>复刻实验室 · 2026-11-25 · 三个单文件，可直接改、直接发</footer>
+</div>
+</body>
+</html>
+
+

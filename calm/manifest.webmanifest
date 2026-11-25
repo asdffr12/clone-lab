@@ -1,0 +1,17 @@
+{
+  "name": "稳住 · 惊恐发作急救",
+  "short_name": "稳住",
+  "description": "呼吸、感官锚定、记录强度。三到五分钟的一次急救练习。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08101A",
+  "theme_color": "#0B1119",
+  "icons": [
+    { "src": "../assets/icon-calm-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-calm-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/icon-calm-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
